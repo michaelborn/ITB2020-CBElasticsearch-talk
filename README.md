@@ -4,10 +4,19 @@
 
 If you think database full-text search is slow and bare-bones, you're right. ElasticSearch is becoming the de-facto standard for lightning-fast search, and with cbElasticSearch, the Ortus-built ElasticSearch API client, you can easily integrate with ElasticSearch in your ColdBox application to provide your users with fast and powerful search. This session will cover ElasticSearch usage from installation and configuration to indexing documents, searching using cbElasticSearch's intuitive API and returning "Did you mean?" suggestions for a fantastic user experience.
 
+## About Me
+
+* Started web development at a web design agency in 2011
+* 💑 Married in 2018
+* 🏠 Bought our first house!
+* 🔨 And I'm -ripping it apart- remodeling it myself. 🤣
+* 🐦 Twitter - [@michaelborn_me](https://twitter.com/michaelborn_me)
+* 📝 I blog at [MichaelBorn.me](https://michaelborn.me)
+
 ## Table Of Contents
 - [ITB 2020: Power Up Your Search with CBelasticsearch](#itb-2020-power-up-your-search-with-cbelasticsearch)
-  - [Table Of Contents](#table-of-contents)
   - [About Me](#about-me)
+  - [Table Of Contents](#table-of-contents)
   - [The State of Search](#the-state-of-search)
     - [Expectations](#expectations)
     - [Current Solutions](#current-solutions)
@@ -21,8 +30,8 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
   - [Managing your Elasticsearch Index](#managing-your-elasticsearch-index)
     - [Creating an Index](#creating-an-index)
     - [Updating an Index](#updating-an-index)
-    - [Reindexing](#reindexing)
     - [Index Migrations](#index-migrations)
+    - [Reindexing](#reindexing)
     - [Deleting an Index](#deleting-an-index)
   - [Working with Documents](#working-with-documents)
     - [Saving a Document](#saving-a-document)
@@ -42,17 +51,9 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
       - [`should`](#should)
   - [Searching Auto-generated text fields](#searching-auto-generated-text-fields)
 
-## About Me
-
-* Started web development at a web design agency in 2011
-* ♡ Married two years
-* 🔨 In the middle of remodeling our first house!
-* 🐦 Twitter - [@michaelborn_me](https://twitter.com/michaelborn_me)
-* ✎ I blog at [MichaelBorn.me](https://michaelborn.me)
-
 ## The State of Search
 
-The year is 2020. Search is a first-class citizen - e.g. the majority of websites are expected to have a functional search.
+The year is 2020. Search is a first-class citizen - e.g. the majority of websites are [*expected*](#expectations) to have a functional search.
 
 ### Expectations
 
@@ -68,41 +69,70 @@ The year is 2020. Search is a first-class citizen - e.g. the majority of website
 
 #### cfSearch
 
+CFSearch is a 2010 solution to a 2020 problem.
+
 * Built into the CF engine and hard to update/upgrade/configure.
 
 #### Database Search
 
-* DB's fit a totally different use case.
+CFSearch is a 2001 solution to a 2020 problem.
+
+* DB's fit a completely different use case.
+  * Designed for fast writes as well as reads
+  * Designed around ACID principles
+  * Specifically, atomicity - queries usually need joins between multiple tables
+  * Usually stored on disk
+* Querying full text is painfully slow.
+* No natural language search
+  * Searching for "dumptruck" will not match "truck"
+* 
 
 ## Elasticsearch
 
 * Fast
+  * No joins necessary
+  * Uses RAM for quicker data reads
 * Intelligent
+  * Analyzes text for natural language search
+  * Can match similar word forms like "running" and "runner"
+  * Can ignore words like "the", "and", or "it"
 * Built to scale
+* Not limited by DB constraints such as "atomicity"
+  * We don't care if some data is redundant!
+  * (i.e. not "atomic")
+  * Why? Because redundant data is *fast*.
 
 ## Installation and Configuration
 
+Once you've made the decision to move forward with Elasticsearch it is incredibly easy to get started. Thanks to [Docker](https://hub.docker.com/_/elasticsearch), [CommandBox](https://commandbox.ortusbooks.com/), and [CBElasticsearch](https://forgebox.io/view/cbelasticsearch) itself, we can have a ColdBox app connecting to a new Elasticsearch server in just a few commands.
+
 ### Installing Elasticsearch
 
-Note: Seems to have issues if you don't specify a version tag. E.g. `:latest` pulls don't work for me. 🤷
+Docker is awesome! Use `docker pull` to download the latest version - in this case, `7.6.2`.
 
-```js
+> Note: The `elasticsearch` docker image does not like the industry-standard `:latest` tag, so you'll have to look up the latest version and specify it manually in the download string. 🤷
+
+```bash
 docker pull elasticsearch:7.6.2
 docker run -d -p 9200:9200 --name elastic_lion  -e "discovery.type=single-node" elasticsearch:7.6.2
 ```
 
+This
+
 ### Installing CBelasticsearch
 
-```js
-box install CBelasticsearch
+Thank CommandBox (and [Brad Wood](https://forgebox.io/view/cbelasticsearch)) for the ability to download open source CFML packages (such as [CBElasticsearch](https://forgebox.io/view/cbelasticsearch) in a single command.
+
+```bash
+box install cbelasticsearch
 ```
 
 ### Configuring Elasticsearch
 
 Two ways to do this - the first is using environment variables. You can use [`commandbox-dotenv`](https://forgebox.io/view/commandbox-dotenv) to read your `.env` file into your web server. Once those env vars are loaded in place, CBelasticsearch will automatically use those to configure the Elasticsearch connection.
 
-```js
-// .env
+```bash
+# .env
 
 # Elasticsearch connection
 ELASTICSEARCH_PROTOCOL=http
@@ -112,7 +142,12 @@ ELASTICSEARCH_PORT=9200
 # Connection authentication, if configured
 ELASTICSEARCH_USERNAME=myUser
 ELASTICSEARCH_PASSWORD=CHANGE_ME
+```
 
+There are more optional settings if you need to fine-tune your Elasticsearch config (and don't want to use `moduleSettings`  in `config/ColdBox.cfc`):
+
+```bash
+# .env
 # Optional settings
 # Default index name
 ELASTICSEARCH_INDEX=sticksandstones
@@ -207,21 +242,23 @@ var updatedIndex = getInstance( "IndexBuilder@CBelasticsearch" ).update(
 )
 ```
 
+### Index Migrations
+
+When the time comes to update an Elasticsearch index due to new fields, changes to field types, or removal of old fields, you will need to perform a "migration" to convert data accurately from the old format to the new. Here's the general flow [Eric Peterson](https://twitter.com/_elpete) uses and recommends when migrating an index to a new mapping configuration:
+
+1. create a new index with the new config. The config lives in the migration to keep track of changes.
+2. Reindex data from the old index to the new index.
+3. Simultaneously swap any alias(es) from the old index to the new index.
+
 ### Reindexing
 
-If you need to make any serious updates to an Elasticsearch index, you'll need to reindex it. Basically, ES isn't great for mass updates of documents and/or changing document field types.
+If you need to make any serious updates to an Elasticsearch index, you'll need to "reindex" it. Basically, Elasticsearch isn't great for mass updates of documents and/or changing document field types. (Remember that Elasticsearch is not a database? Here's where Elasticsearch requires a bit more work than a relational DB. The pros still outweigh the cons.)
 
-For this, you'll need to create a new index and reindex (e.g. "pour") the documents from the old index into the new.
+To reindex means to create a new index and basically pour the documents from the old index into the new.
 
 ```js
 getInstance( "Client@CBelasticsearch" ).reindex( "books", "books" );
 ```
-
-### Index Migrations
-
-1. create a new index with the new config. The config lives in the migration to keep track of changes.
-2. Reindex data from the old index to the new index.
-3. Simultaneously swap and alias from the old index to the new index.
 
 ### Deleting an Index
 

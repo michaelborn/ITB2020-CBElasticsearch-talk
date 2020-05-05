@@ -129,6 +129,8 @@ docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2
 
 The important piece here is the port mapping, which uses your machine port (host port) `9200` to map to the container port `9200` which is the default for Elasticsearch connections.
 
+Also note we are passing an environment variable to Elasticsearch which instructs Elasticsearch to only build and configure a single node. This is simply because you shouldn't need more than a single node for demo purposes!
+
 ### Installing CBelasticsearch
 
 Thank CommandBox (and [Brad Wood](https://forgebox.io/view/cbelasticsearch)) for the ability to download open source CFML packages (such as [CBElasticsearch](https://forgebox.io/view/cbelasticsearch)) in a single command.
@@ -407,13 +409,13 @@ Before we get too much farther, it is important that you understand the followin
 1. [how your index is mapped](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html) (e.g. how the index fields and field types are defined) and 
 2. [how the Elasticsearch analyzer works](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html)
 
-I'll do my best to explain these topics as we come to them, but the best explanations can be found in [the Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html).
+I'll do my best to explain these topics as we come to them, (actually, see the [indexing explanation](#what-is-an-index)) but the best explanations can be found in [the Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html).
 
 ### Term vs Match
 
 #### Term
 
-Use `term` queries for `keyword` fields. Do **not** use on `text` fields or you will not get any results, buecause `text` fields are analyzed during indexing and not stored in their original form.
+Use `term` queries for `keyword` fields. Do **not** use on `text` fields or you will not get any results, because `text` fields are analyzed during indexing and not stored in their original form.
 
 Here's an example of a `term` query using the Elasticsearch query JSON syntax:
 
@@ -467,7 +469,7 @@ You know, "fuzzy". Unclear. Not a hard black/white border.
 
 Term queries are NOT fuzzy - they are black and white. It either is `id=1234` or not.
 
-Match queries allow fuzzy search strings - they can match part of a phrase. Like `name=Michael*` will catch both `Michael Born` and `Michael Jordan`.
+Match queries allow fuzzy search strings - they can match part of a phrase. Like `name=M*l` will catch both `Michael` and `Marshall`.
 
 We call this "Fuzziness".
 

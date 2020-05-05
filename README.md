@@ -31,11 +31,11 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
     - [What Is An Index?](#what-is-an-index)
     - [Indexing a Document](#indexing-a-document)
   - [Managing your Elasticsearch Index](#managing-your-elasticsearch-index)
-    - [Creating an Index](#creating-an-index)
-    - [Updating an Index](#updating-an-index)
-    - [Index Migrations](#index-migrations)
+    - [Creating](#creating)
+    - [Updating](#updating)
+    - [Migrating](#migrating)
     - [Reindexing](#reindexing)
-    - [Deleting an Index](#deleting-an-index)
+    - [Deleting](#deleting)
   - [Working with Documents](#working-with-documents)
     - [Saving a Document](#saving-a-document)
     - [Updating a Document](#updating-a-document)
@@ -80,7 +80,6 @@ CFSearch is a 2010 solution to a 2020 problem.
   * Difficult or impossible to update/upgrade
   * Difficult or impossible to configure
   * Very difficult to access the underlying search engine
-* 
 
 #### Database Search
 
@@ -94,6 +93,8 @@ CFSearch is a 2001 solution to a 2020 problem.
 * Querying full text is painfully slow.
 * No natural language search
   * Searching for "dumptruck" will not match "truck"
+
+> **Note:** A relational database is *still* the best way to store and manage large amounts of data in an accurate, consistent and easily editable manner. I am not hating on databases - they are awesome, just not designed nor fit for powerful search applications.
 
 ## Elasticsearch
 
@@ -122,10 +123,10 @@ Docker is awesome! Use `docker pull` to download the latest version - in this ca
 
 ```bash
 docker pull elasticsearch:7.6.2
-docker run -d -p 9200:9200 --name elastic_lion  -e "discovery.type=single-node" elasticsearch:7.6.2
+docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2
 ```
 
-This
+The important piece here is the port mapping, which uses your machine port (host port) `9200` to map to the container port `9200` which is the default for Elasticsearch connections.
 
 ### Installing CBelasticsearch
 
@@ -211,9 +212,9 @@ Secondly, "index" means a strict mapping of keywords ... TODO:
 
 ## Managing your Elasticsearch Index
 
-### Creating an Index
+### Creating
 
-Using the Elasticsearch mapping syntax:
+We can create a new index using the Elasticsearch mapping syntax:
 
 ```js
 var indexBuilder = getInstance( "IndexBuilder@CBelasticsearch" ).new(
@@ -228,7 +229,7 @@ var indexBuilder = getInstance( "IndexBuilder@CBelasticsearch" ).new(
 ).save();
 ```
 
-Using the MappingBuilder
+But we can clean this up a little by using the `MappingBuilder` object:
 
 ```js
 var myNewIndex = getInstance( "IndexBuilder@CBelasticsearch" ).new(
@@ -245,9 +246,9 @@ var myNewIndex = getInstance( "IndexBuilder@CBelasticsearch" ).new(
 ).save();
 ```
 
-### Updating an Index
+### Updating
 
-Use the IndexBuilder `.update()` method to issue what we call a "PUT mapping" - so named because the API call issued to update the index mapping uses the `PUT` HTTP method.
+Use the `IndexBuilder`'s `.update()` method to issue what we call a "PUT mapping" - so named because the API call issued to update the index mapping uses the `PUT` HTTP method.
 
 ```js
 var updatedIndex = getInstance( "IndexBuilder@CBelasticsearch" ).update(
@@ -265,25 +266,25 @@ var updatedIndex = getInstance( "IndexBuilder@CBelasticsearch" ).update(
 )
 ```
 
-### Index Migrations
+### Migrating
 
 When the time comes to update an Elasticsearch index due to new fields, changes to field types, or removal of old fields, you will need to perform a "migration" to convert data accurately from the old format to the new. Here's the general flow [Eric Peterson](https://twitter.com/_elpete) uses and recommends when migrating an index to a new mapping configuration:
 
-1. create a new index with the new config. The config lives in the migration to keep track of changes.
-2. Reindex data from the old index to the new index.
+1. Create a new index with the new mapping configuration. The mapping config should be created and saved in a migration file (perhaps in `resources/migrations/elasticsearch`, for example`) to keep track of changes.
+2. [Reindex data from the old index to the new index](#reindexing).
 3. Simultaneously swap any alias(es) from the old index to the new index.
 
 ### Reindexing
 
 If you need to make any serious updates to an Elasticsearch index, you'll need to "reindex" it. Basically, Elasticsearch isn't great for mass updates of documents and/or changing document field types. (Remember that Elasticsearch is not a database? Here's where Elasticsearch requires a bit more work than a relational DB. The pros still outweigh the cons.)
 
-To reindex means to create a new index and basically pour the documents from the old index into the new.
-
 ```js
 getInstance( "Client@CBelasticsearch" ).reindex( "books", "books" );
 ```
 
-### Deleting an Index
+To reindex means to create a new index and basically pour the documents from the old index into the new.
+
+### Deleting
 
 If you need to delete an index, here's how you can do that with the `Client` object:
 
@@ -292,6 +293,8 @@ getInstance( "IndexBuilder@CBelasticsearch" )
     .setIndexName( "books" )
     .delete();
 ```
+
+It's not hard. 😉 You can also use the `deleteIndex()` method in the `Client` object if you so desire.
 
 ## Working with Documents
 

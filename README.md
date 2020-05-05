@@ -27,6 +27,9 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
     - [Installing Elasticsearch](#installing-elasticsearch)
     - [Installing CBelasticsearch](#installing-cbelasticsearch)
     - [Configuring Elasticsearch](#configuring-elasticsearch)
+  - [Elasticsearch Indexing Concepts](#elasticsearch-indexing-concepts)
+    - [What Is An Index?](#what-is-an-index)
+    - [Indexing a Document](#indexing-a-document)
   - [Managing your Elasticsearch Index](#managing-your-elasticsearch-index)
     - [Creating an Index](#creating-an-index)
     - [Updating an Index](#updating-an-index)
@@ -49,7 +52,9 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
     - [Boolean searching](#boolean-searching)
       - [`must`](#must)
       - [`should`](#should)
+  - [Random Tips](#random-tips)
   - [Searching Auto-generated text fields](#searching-auto-generated-text-fields)
+  - [Resources](#resources)
 
 ## The State of Search
 
@@ -71,7 +76,11 @@ The year is 2020. Search is a first-class citizen - e.g. the majority of website
 
 CFSearch is a 2010 solution to a 2020 problem.
 
-* Built into the CF engine and hard to update/upgrade/configure.
+* Built into the CF engine
+  * Difficult or impossible to update/upgrade
+  * Difficult or impossible to configure
+  * Very difficult to access the underlying search engine
+* 
 
 #### Database Search
 
@@ -85,7 +94,6 @@ CFSearch is a 2001 solution to a 2020 problem.
 * Querying full text is painfully slow.
 * No natural language search
   * Searching for "dumptruck" will not match "truck"
-* 
 
 ## Elasticsearch
 
@@ -121,7 +129,7 @@ This
 
 ### Installing CBelasticsearch
 
-Thank CommandBox (and [Brad Wood](https://forgebox.io/view/cbelasticsearch)) for the ability to download open source CFML packages (such as [CBElasticsearch](https://forgebox.io/view/cbelasticsearch) in a single command.
+Thank CommandBox (and [Brad Wood](https://forgebox.io/view/cbelasticsearch)) for the ability to download open source CFML packages (such as [CBElasticsearch](https://forgebox.io/view/cbelasticsearch)) in a single command.
 
 ```bash
 box install cbelasticsearch
@@ -133,7 +141,6 @@ Two ways to do this - the first is using environment variables. You can use [`co
 
 ```bash
 # .env
-
 # Elasticsearch connection
 ELASTICSEARCH_PROTOCOL=http
 ELASTICSEARCH_HOST=127.0.0.1
@@ -185,6 +192,22 @@ moduleSettings = {
     }
 };
 ```
+
+## Elasticsearch Indexing Concepts
+
+Elasticsearch works the way it does because of the powerful data methodologies underlying all that Java. Documents are not stored as-is, like a file, nor are they merely separated into fields as with a database. Elasticsearch uses an index to organize all related documents and track searchable keywords and phrases across the entire set of documents.
+
+### What Is An Index?
+
+> I highly recommend reading the [Elasticsearch documentation on documents and indices](https://www.elastic.co/guide/en/elasticsearch/reference/current/documents-indices.html).
+
+An index can refer to two things: one very generic, and the other **very** specific.
+
+First, the term "index" can mean a collection of documents organized around a specific type, such as "Autos", "Logs", "Books" or "Reviews". You can think of this (in a high-level sense) as a database table - e.g. a set of rows with a defined structure and purpose. When referring to an Elasticsearch "index" in this document/repo/talk, I'm usually referring to this type of index.
+
+Secondly, "index" means a strict mapping of keywords ... TODO:
+
+### Indexing a Document
 
 ## Managing your Elasticsearch Index
 
@@ -486,6 +509,8 @@ A `should` clause in Elasticsearch, like an SQL `OR` boolean, specifies that at 
 }
 ```
 
+## Random Tips
+
 ## Searching Auto-generated text fields
 
 Any field less than 156 (maybe 255?) characters which is auto-mapped (e.g. not explicitly set) to `text` will have a subfield of `keyword` you can reference for exact `term` searches. This helps mitigate some of the effects of auto-mapped fields set to a `text` field type.
@@ -501,3 +526,10 @@ Any field less than 156 (maybe 255?) characters which is auto-mapped (e.g. not e
     }
 }
 ```
+
+## Resources
+
+For more learning, check out any or all the following:
+
+* [CBElastisearch documentation](https://cbelasticsearch.ortusbooks.com/)
+* [Easy Elasticsearch with CBElasticsearch](https://www.slideshare.net/ortussolutions/itb2019-easy-elasticsearch-with-cbelasticsearch-jon-clausen) - ITB2019 talk by Jon Clausen. This was my first intro to Elasticsearch.

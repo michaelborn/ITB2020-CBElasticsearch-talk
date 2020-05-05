@@ -8,8 +8,9 @@ If you think database full-text search is slow and bare-bones, you're right. Ela
 
 * Started web development at a web design agency in 2011
 * 💑 Married in 2018
-* 🏠 Bought our first house!
-* 🔨 And I'm -ripping it apart- remodeling it myself. 🤣
+* 🚀 Joined Ortus August 2019
+* 🏠 Just bought our first house!
+* 🔨 And I'm ripping it apart / remodeling it myself! 🤣
 * 🐦 Twitter - [@michaelborn_me](https://twitter.com/michaelborn_me)
 * 📝 I blog at [MichaelBorn.me](https://michaelborn.me)
 
@@ -206,7 +207,44 @@ An index can refer to two things: one very generic, and the other **very** speci
 
 First, the term "index" can mean a collection of documents organized around a specific type, such as "Autos", "Logs", "Books" or "Reviews". You can think of this (in a high-level sense) as a database table - e.g. a set of rows with a defined structure and purpose. When referring to an Elasticsearch "index" in this document/repo/talk, I'm usually referring to this type of index.
 
-Secondly, "index" means a strict mapping of keywords ... TODO:
+Secondly, "index" is both the process (in verb form) and the result (index as a noun) of analyzing the text values within documents in order to build an mapping (ok, an index) of searchable keywords (called "tokens") of each document. When a search query is executed, Elasticsearch will analyze your search terms in a similar fashion and look them up within the index to rapidly determine which documents have those same tokens.
+
+For example, the phrase `the quick brown fox jumps over the lazy dog` can be broken down into the following rudimentary index:
+
+```js
+{
+    "the" : { "frequency" : 2 },
+    "quick" : { "frequency" : 1 },
+    "brown" : { "frequency" : 1 },
+    "fox" : { "frequency" : 1 },
+    "jumps" : { "frequency" : 1 },
+    "over" : { "frequency" : 1 },
+    "lazy" : { "frequency" : 1 },
+    "dog" : { "frequency" : 1 }
+}
+```
+
+Note that since `the` is used twice, this sentence is twice as relevant in a search for `the` as it is for a search for `fox`. However, much of the time it is useful to [configure Elasticsearch to remove "stopwords"](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) - the Elasticsearch term for generic, non-useful English words such as `"the"`, `"and"` and `"or"`.
+
+Furthermore, Elasticsearch supports the ability to "stem" tokens during the indexing process. Stemming breaks complex words down into their root form, making it easy to match `"jumps"` with `"jumping"`.
+
+With those two changes, let's look at our document tokens again:
+
+```js
+{
+    "quick" : { "frequency" : 1 },
+    "brown" : { "frequency" : 1 },
+    "fox" : { "frequency" : 1 },
+    "jump" : { "frequency" : 1 },
+    "over" : { "frequency" : 1 },
+    "lazy" : { "frequency" : 1 },
+    "dog" : { "frequency" : 1 }
+}
+```
+
+Since the `"the"` token is removed, the document is now more relevant to the word `"dog"`, for example, because the ratio of the word `"dog"` to the entire document just went up slightly.
+
+Secondly, the token `"jumps"` has been broken down (e.g. "stemmed") into `"jump"`. While this is not a drastic change, it is indeed a large step forward. Searching the index by the following phrase: `"dog jumping"` will match the document because when the search phrase is analyzed it is *also* broken down into root words, and thus a search for `"dog jumping"` becomes a search for `"dog jump"`. Once that analysis is done, it is easy to find our document by those tokens.
 
 ### Indexing a Document
 

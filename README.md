@@ -81,10 +81,16 @@ CFSearch is a 2010 solution to a 2020 problem.
   * Difficult or impossible to update/upgrade
   * Difficult or impossible to configure
   * Very difficult to access the underlying search engine
+* Limited query language
+  * One can only cram so much syntax into a single tag
+* Difficult to configure or debug a remote machine
+  * Advanced options are set in `.txt` and `.xml` files
+  * Requires shell or GUI access to the machine
+* No built-in scaling mechanisms
 
 #### Database Search
 
-CFSearch is a 2001 solution to a 2020 problem.
+Database search is a 2001 solution to a 2020 problem.
 
 * DB's fit a completely different use case.
   * Designed for fast writes as well as reads
@@ -93,7 +99,8 @@ CFSearch is a 2001 solution to a 2020 problem.
   * Usually stored on disk
 * Querying full text is painfully slow.
 * No natural language search
-  * Searching for "dumptruck" will not match "truck"
+  * Can't match Home to House
+* No ordering by search relevance
 
 > **Note:** A relational database is *still* the best way to store and manage large amounts of data in an accurate, consistent and easily editable manner. I am not hating on databases - they are awesome, just not designed nor fit for powerful search applications.
 
@@ -576,3 +583,4 @@ For more learning, check out any or all the following:
 
 * [CBElastisearch documentation](https://cbelasticsearch.ortusbooks.com/)
 * [Easy Elasticsearch with CBElasticsearch](https://www.slideshare.net/ortussolutions/itb2019-easy-elasticsearch-with-cbelasticsearch-jon-clausen) - ITB2019 talk by Jon Clausen. This was my first intro to Elasticsearch.
+* [Enterprise Search with ColdFusion Solr](https://dsirucek.files.wordpress.com/2012/05/enterprise-search-with-coldfusion-solr-final.pdf) - This is why we use Elasticsearch - we are not limited by a two-tag interface.

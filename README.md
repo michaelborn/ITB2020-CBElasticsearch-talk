@@ -581,6 +581,6 @@ Any field less than 156 (maybe 255?) characters which is auto-mapped (e.g. not e
 
 For more learning, check out any or all the following:
 
-* [CBElastisearch documentation](https://cbelasticsearch.ortusbooks.com/)
+* [CBElasticsearch documentation](https://cbelasticsearch.ortusbooks.com/)
 * [Easy Elasticsearch with CBElasticsearch](https://www.slideshare.net/ortussolutions/itb2019-easy-elasticsearch-with-cbelasticsearch-jon-clausen) - ITB2019 talk by Jon Clausen. This was my first intro to Elasticsearch.
 * [Enterprise Search with ColdFusion Solr](https://dsirucek.files.wordpress.com/2012/05/enterprise-search-with-coldfusion-solr-final.pdf) - This is why we use Elasticsearch - we are not limited by a two-tag interface.
